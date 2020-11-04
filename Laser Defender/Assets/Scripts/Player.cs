@@ -14,10 +14,22 @@ public class Player : MonoBehaviour
      * the Unity compiler doesn't know about these methods, we need to make sure that the method is called at the proper time.
      */
 {
+
+    [SerializeField] float movementSpeed = 10f;
+
+    // boundary coordinates
+    float xMin;
+    float xMax;
+
+    float yMin;
+    float yMax;
+
     // Start is called before the first frame update
     void Start() // built-in method and this is a method definition (explaining what the method will do)
     {
         // print("The start method has been called!"); // Method call
+
+        SetUpMoveBoundaries();
     }
 
     // Update is called once per frame
@@ -32,8 +44,15 @@ public class Player : MonoBehaviour
 
     void Move()
     {
-        var deltaX = Input.GetAxis("Horizontal");
 
+        //GetAxis returns a -ve or +ve value depending on which button on the keyboard
+
+        var deltaX = Input.GetAxis("Horizontal") * Time.deltaTime * movementSpeed;
+        var deltaY = Input.GetAxis("Vertical") * Time.deltaTime * movementSpeed;
+
+        /*
+         * Since the Move() method is being called in the Update which executes once per frame,
+         * the player's movement is in general frame dependant since the higher
 
         /* To access properties for THIS objecect the format is:
          * componentName.propertyName
@@ -44,8 +63,30 @@ public class Player : MonoBehaviour
 
         // The current x popsition (for the player) is changed with the slight change of deltaX EVERY frane
 
-        var newXPos = transform.position.x + deltaX;
+        var newXPos = Mathf.Clamp(transform.position.x + deltaX, xMin, xMax);
 
-        transform.position = new Vector3(newXPos, transform.position.y, transform.position.z);
+        var newYPos = Mathf.Clamp(transform.position.y + deltaY, yMin, yMax);
+
+        // changing the players ships' position
+        transform.position = new Vector3(newXPos, newYPos, transform.position.z);
+    }
+
+    void SetUpMoveBoundaries()
+    {
+        float padding = 0.5f;
+
+        /*
+         * We're going to set the boundaries using ViewportToWorldPoint so that the
+         * coordinates of the boundaries are not dependant on the camera size but
+         * they are always 
+         */
+
+        Camera gameCamera = Camera.main;
+
+        xMin = gameCamera.ViewportToWorldPoint(new Vector3(0, 0, 0)).x + padding;
+        xMax = gameCamera.ViewportToWorldPoint(new Vector3(1, 0, 0)).x - padding;
+
+        yMin = gameCamera.ViewportToWorldPoint(new Vector3(0, 0, 0)).y + padding;
+        yMax = gameCamera.ViewportToWorldPoint(new Vector3(0, 1, 0)).y - padding;
     }
 }
